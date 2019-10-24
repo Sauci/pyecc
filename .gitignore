@@ -1,0 +1,4 @@
+.idea
+test_input/bin
+test_input/build
+*__pycache__*

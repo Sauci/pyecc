@@ -1,0 +1,2 @@
+pytest==5.1.2
+git+git://github.com/Sauci/pyelf.git@master#egg=pyelf
