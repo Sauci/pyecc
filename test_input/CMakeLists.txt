@@ -4,7 +4,7 @@ project(hacky VERSION 0.0.1 LANGUAGES C ASM)
 
 find_package(PythonInterp 3.6 REQUIRED)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_executable(armv7r_le.elf crt0.S)
 target_compile_options(armv7r_le.elf
