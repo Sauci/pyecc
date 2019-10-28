@@ -43,7 +43,7 @@ def test_big_endian_ecc_byte_without_address_participation(msw, lsw, expected):
     assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64) == expected
 
 
-@pytest.mark.parametrize('addr, msw, lsw, expected', [# pytest.param(0x002415D8, 0xF126E546, 0x9A03FA6F, 0x7C),
+@pytest.mark.parametrize('addr, msw, lsw, expected', [pytest.param(0x002415D8, 0xF126E546, 0x9A03FA6F, 0x7C),
                                                       # pytest.param(0x000952B8, 0x21D94D7E, 0xB18B4F04, 0x3A),
                                                       pytest.param(0x0002C580, 0xF70C3A2D, 0xEC8835ED, 0x60),
                                                       pytest.param(0x00117B40, 0x0ED9FB58, 0x3E03C60D, 0x6B),
