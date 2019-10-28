@@ -10,7 +10,7 @@ class ECCGen(object):
         self._elf_file = None
         if elf_file:
             self._elf_file = pyelf.ElfFile(elf_file)
-        self.endianness = endianness
+        self._endianness = endianness
 
     @staticmethod
     def _xor_list(data):
@@ -18,6 +18,12 @@ class ECCGen(object):
         for d in data[1:]:
             result ^= d
         return result
+
+    @property
+    def endianness(self):
+        if self._elf_file is not None:
+            return self._elf_file.endianness
+        return self._endianness
 
     @property
     def parity(self):
@@ -51,16 +57,6 @@ class ECCGen(object):
             return be_code
         return le_code
 
-    @property
-    def endianness(self):
-        return self._endianness
-
-    @endianness.setter
-    def endianness(self, value):
-        if value not in ('big', 'little'):
-            raise ValueError('endianness must be either \'big\' or \'little\'')
-        self._endianness = value
-
     def get_ecc_byte(self, data, data_size=64):
         ecc_byte = 0
         for ecc_bit_idx in range(len(self.participation)):
@@ -70,10 +66,10 @@ class ECCGen(object):
 
     def get_ecc_from_elf(self, data_size=64, addr_size=32):
         result = list()
-        binary = self._elf_file.binary
-        for data_index in range(0, floor(len(binary)), data_size):
-            msw, lsw = struct.unpack('{}{}'.format('>' if self.endianness == 'big' else '<',
+        for data_index in range(0, floor(len(self._elf_file.binary)), int(data_size / 8)):
+            msw, lsw = struct.unpack('{}{}'.format('>' if self._elf_file.endianness == 'big' else '<',
                                                    'I' * int(data_size / 32)),
-                                     binary[data_index:data_index + int(data_size / 8)])
+                                     self._elf_file.binary[data_index:data_index + int(data_size / 8)])
             result.append(self.get_ecc_byte((msw << 32) | lsw, data_size=data_size))
+            print('data_index: 0x{:08X} ECC: 0x{:02X}'.format(data_index, result[-1]))
         return bytearray(result)
