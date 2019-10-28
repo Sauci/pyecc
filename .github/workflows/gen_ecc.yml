@@ -42,7 +42,7 @@ jobs:
         name: Publish executable artifacts
         with:
           name: test_input
-          path: test_input/build/bin
+          path: test_input/bin
 #  generateECCFlashContentWithNowECC:
 #    name: Generate ECC flash content using pyecc
 #    runs-on: ubuntu-latest
