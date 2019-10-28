@@ -1,0 +1,55 @@
+name: Generate ECC binary
+
+on: [push]
+
+jobs:
+  publishDockerImage:
+    name: Publish from Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Publish to registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          dockerfile: Dockerfile
+          name: docker.pkg.github.com/sauci/pyecc/pyecc
+          username: ${{secrets.GITHUB_PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.GITHUB_PKG_REGISTRY_RW_TOKEN}}
+          registry: docker.pkg.github.com
+  generateECCFlashContentWithPyecc:
+    needs: publishDockerImage
+    name: Generate artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Login to Github Package Registry
+        run: >-
+          echo ${{secrets.GITHUB_PKG_REGISTRY_RW_TOKEN}} |
+          docker login docker.pkg.github.com
+          --username ${{secrets.GITHUB_PKG_REGISTRY_USERNAME}}
+          --password-stdin
+      - name: Pull Docker image
+        run: docker pull docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/}
+      - name: Configure build system
+        run: >-
+          docker run -v $(pwd):/usr/project docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/} /bin/bash -c
+          "cd test_input && mkdir build && cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake"
+      - name: Build executables
+        run: >-
+          docker run -v $(pwd):/usr/project docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/} /bin/bash -c
+          "cd test_input/build && make le32.elf && make be32.elf"
+      - uses: actions/upload-artifact@master
+        name: Publish executable artifacts
+        with:
+          name: test_input
+          path: test_input/bin
+#  generateECCFlashContentWithNowECC:
+#    name: Generate ECC flash content using pyecc
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@master
+#        name: Checkout pyecc project
+#      - name: Build ECC binary using pyecc
+#        run: |
+#          docker build -t pyecc .
+#          docker run -v $(pwd):/usr/project --name pyecc pyecc /bin/bash -c "cd test_input && mkdir build && cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake && make all"

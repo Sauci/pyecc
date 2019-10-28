@@ -8,6 +8,7 @@ COPY requirements.txt requirements.txt
 
 # install packages for environment.
 RUN apk add --no-cache --update \
+    bash \
     cmake \
     git \
     make \
