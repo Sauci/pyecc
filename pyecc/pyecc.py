@@ -77,11 +77,3 @@ class ECCGen(object):
                                      binary[data_index:data_index + int(data_size / 8)])
             result.append(self.get_ecc_byte((msw << 32) | lsw, data_size=data_size))
         return bytearray(result)
-
-
-if __name__ == '__main__':
-    e = ECCGen(endianness='little')
-    r = e.get_ecc_byte((0x954F6D2F << 32) |
-                       0x2992A9B6, 64)
-    b = e.get_ecc_from_elf('/Users/guillaumesottas/Documents/Github/hacky/cmake-build-debug/bin/boot.elf')
-    print('0x{:02X}'.format(r))
