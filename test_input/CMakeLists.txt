@@ -31,4 +31,9 @@ add_custom_target(armv7r_be_ecc_pyecc.bin ALL
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/armv7r_be.elf
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/armv7r_be_ecc_pyecc.bin
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/..
-    COMMENT "Generating ECC binary for target armv7r_be_ecc_pyecc.bin")
+    COMMENT "Generating ECC binary using pyecc")
+
+add_custom_target(armv7r_be_ecc_nowecc.bin ALL
+    COMMAND ${OBJCOPY} -O binary armv7r_be_F021_16M_NOADD.elf armv7r_be_ecc_nowecc.bin
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    COMMENT "Generating ECC binary using nowecc")
