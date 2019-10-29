@@ -19,8 +19,8 @@ def test_little_endian_ecc_byte_without_address_participation(msw, lsw, expected
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='little')
-    assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64) == expected
+    ecc = ECCGen()
+    assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64, endianness='little') == expected
 
 
 @pytest.mark.parametrize('msw, lsw, expected', [pytest.param(0x2F6D4F95, 0xB6A99229, 0xAA),
@@ -39,8 +39,8 @@ def test_big_endian_ecc_byte_without_address_participation(msw, lsw, expected):
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='big')
-    assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64) == expected
+    ecc = ECCGen()
+    assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64, endianness='big') == expected
 
 
 @pytest.mark.parametrize('addr, msw, lsw, expected', [pytest.param(0x002415D8, 0xF126E546, 0x9A03FA6F, 0x7C),
@@ -59,8 +59,8 @@ def test_little_endian_ecc_byte_with_address_participation(addr, msw, lsw, expec
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='little')
-    assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 21) == expected
+    ecc = ECCGen()
+    assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 21, endianness='little') == expected
 
 
 @pytest.mark.parametrize('addr, msw, lsw, expected', [pytest.param(0x002415D8, 0x46E526F1, 0x6FFA039A, 0x7C),
@@ -80,27 +80,28 @@ def test_big_endian_ecc_byte_with_address_participation(addr, msw, lsw, expected
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='big')
-    assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 21) == expected
+    ecc = ECCGen()
+    assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 21, endianness='big') == expected
 
 
-@pytest.mark.parametrize('endianness, addr, msw, lsw, expected', [pytest.param('little', None, 0xE59FF018, 0xEAFFFFFE, 0xFB),
-                                                                  pytest.param('little', None, 0xEAFFFFFE, 0xE59FF018, 0xFB),
-                                                                  pytest.param('little', 0x00000000, 0xE59FF018, 0xEAFFFFFE, 0xFB),
-                                                                  pytest.param('little', 0x00000000, 0xEAFFFFFE, 0xE59FF018, 0xFB),
-                                                                  pytest.param('big', None, 0xE59FF018, 0xEAFFFFFE, 0xFB),
-                                                                  pytest.param('big', None, 0xEAFFFFFE, 0xE59FF018, 0xFB),
-                                                                  pytest.param('big', 0x00000000, 0xE59FF018, 0xEAFFFFFE, 0xFB),
-                                                                  pytest.param('big', 0x00000000, 0xEAFFFFFE, 0xE59FF018, 0xFB)])
+@pytest.mark.parametrize('endianness, addr, msw, lsw, expected',
+                         [pytest.param('little', None, 0xE59FF018, 0xEAFFFFFE, 0xFB),
+                          pytest.param('little', None, 0xEAFFFFFE, 0xE59FF018, 0xFB),
+                          pytest.param('little', 0x00000000, 0xE59FF018, 0xEAFFFFFE, 0xFB),
+                          pytest.param('little', 0x00000000, 0xEAFFFFFE, 0xE59FF018, 0xFB),
+                          pytest.param('big', None, 0xE59FF018, 0xEAFFFFFE, 0xFB),
+                          pytest.param('big', None, 0xEAFFFFFE, 0xE59FF018, 0xFB),
+                          pytest.param('big', 0x00000000, 0xE59FF018, 0xEAFFFFFE, 0xFB),
+                          pytest.param('big', 0x00000000, 0xEAFFFFFE, 0xE59FF018, 0xFB)])
 def test_data_from_flash(endianness, addr, msw, lsw, expected):
     """
     test if generated ECC byte is correct when address value does participate to ECC value
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness=endianness)
+    ecc = ECCGen()
     if addr is not None:
-        value = ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 29)
+        value = ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 29, endianness=endianness)
     else:
         value = ecc.get_ecc_byte((msw << 32) | lsw, data_size=64)
     assert value in (expected, ((expected & 0xF0) >> 0x04) | (expected & 0x0F))
