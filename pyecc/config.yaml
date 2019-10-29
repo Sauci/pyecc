@@ -1,0 +1,89 @@
+---
+shared_data:
+  participation_table_big_endian: &pt_be
+    - address: 0x0A7554EA
+      msw: 0xD1B4D1B4
+      lsw: 0x2E4B2E4B
+    - address: 0x1D68BAD1
+      msw: 0x57155715
+      lsw: 0x57155715
+    - address: 0x14DAA9B5
+      msw: 0x99A699A6
+      lsw: 0x99A699A6
+    - address: 0x13C6A78D
+      msw: 0xE338E338
+      lsw: 0xE338E338
+    - address: 0x0FC19F83
+      msw: 0xFCC0FCC0
+      lsw: 0xFCC0FCC0
+    - address: 0x1FC07F80
+      msw: 0x00FF00FF
+      lsw: 0x00FF00FF
+    - address: 0x003FFF80
+      msw: 0xFF0000FF
+      lsw: 0xFF0000FF
+    - address: 0x1FC0007F
+      msw: 0x00FFFF00
+      lsw: 0xFF0000FF
+  participation_table_little_endian: &pt_le
+    - address: 0x0A7554EA
+      msw: 0xB4D1B4D1
+      lsw: 0x4B2E4B2E
+    - address: 0x1D68BAD1
+      msw: 0x15571557
+      lsw: 0x15571557
+    - address: 0x14DAA9B5
+      msw: 0xA699A699
+      lsw: 0xA699A699
+    - address: 0x13C6A78D
+      msw: 0x38E338E3
+      lsw: 0x38E338E3
+    - address: 0x0FC19F83
+      msw: 0xC0FCC0FC
+      lsw: 0xC0FCC0FC
+    - address: 0x1FC07F80
+      msw: 0xFF00FF00
+      lsw: 0xFF00FF00
+    - address: 0x003FFF80
+      msw: 0xFF0000FF
+      lsw: 0xFF0000FF
+    - address: 0x1FC0007F
+      msw: 0x00FFFF00
+      lsw: 0xFF0000FF
+  pt_spna106: &pt_spna106
+    - even
+    - even
+    - odd
+    - odd
+    - odd
+    - odd
+    - odd
+    - odd
+spna106_le_no_address:
+  parity_table: *pt_spna106
+  participation_address_mask: 0x00000000
+  participation_table: *pt_le
+spna106_be_no_address:
+  parity_table: *pt_spna106
+  participation_address_mask: 0x00000000
+  participation_table: *pt_be
+spna106_le_with_address:
+  parity_table: *pt_spna106
+  participation_address_mask: 0x003FFFF8
+  participation_table: *pt_le
+spna106_be_with_address:
+  parity_table: *pt_spna106
+  participation_address_mask: 0x003FFFF8
+  participation_table: *pt_be
+tms570lc4357:
+  parity_table:
+    - even
+    - even
+    - odd
+    - odd
+    - even
+    - even
+    - even
+    - even
+  participation_address_mask: 0xFFFFFFF8
+  participation_table: *pt_be

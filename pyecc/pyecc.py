@@ -1,15 +1,16 @@
-import argparse
+import os
 import pyelf
 import struct
+import yaml
 
 from math import floor
 
 
 class ECCGen(object):
-    def __init__(self, elf_file=None):
-        self._elf_file = None
-        if elf_file:
-            self._elf_file = pyelf.ElfFile(elf_file)
+    def __init__(self, device):
+        with open(os.path.join(os.path.dirname(__file__),  'config.yaml'), 'r') as fp:
+            config = yaml.safe_load(fp)
+        self._config = config[device]
 
     @staticmethod
     def _xor_list(data):
@@ -19,53 +20,49 @@ class ECCGen(object):
         return result
 
     @property
-    def parity(self):
-        return (lambda x: x,
-                lambda x: x,
-                lambda x: 0 if x else 1,
-                lambda x: 0 if x else 1,
-                lambda x: 0 if x else 1,
-                lambda x: 0 if x else 1,
-                lambda x: 0 if x else 1,
-                lambda x: 0 if x else 1)
+    def address_mask(self):
+        return self._config['participation_address_mask']
 
-    @staticmethod
-    def get_participation(ecc_bit_index, endianness='little'):
-        if endianness == 'big':
-            return ((0x0A7554EA << 64) | (0xD1B4D1B4 << 32) | 0x2E4B2E4B,
-                    (0x1D68BAD1 << 64) | (0x57155715 << 32) | 0x57155715,
-                    (0x14DAA9B5 << 64) | (0x99A699A6 << 32) | 0x99A699A6,
-                    (0x13C6A78D << 64) | (0xE338E338 << 32) | 0xE338E338,
-                    (0x0FC19F83 << 64) | (0xFCC0FCC0 << 32) | 0xFCC0FCC0,
-                    (0x1FC07F80 << 64) | (0x00FF00FF << 32) | 0x00FF00FF,
-                    (0x003FFF80 << 64) | (0xFF0000FF << 32) | 0xFF0000FF,
-                    (0x1FC0007F << 64) | (0x00FFFF00 << 32) | 0xFF0000FF)[ecc_bit_index]
-        elif endianness == 'little':
-            return ((0x0A7554EA << 64) | (0xB4D1B4D1 << 32) | 0x4B2E4B2E,
-                    (0x1D68BAD1 << 64) | (0x15571557 << 32) | 0x15571557,
-                    (0x14DAA9B5 << 64) | (0xA699A699 << 32) | 0xA699A699,
-                    (0x13C6A78D << 64) | (0x38E338E3 << 32) | 0x38E338E3,
-                    (0x0FC19F83 << 64) | (0xC0FCC0FC << 32) | 0xC0FCC0FC,
-                    (0x1FC07F80 << 64) | (0xFF00FF00 << 32) | 0xFF00FF00,
-                    (0x003FFF80 << 64) | (0xFF0000FF << 32) | 0xFF0000FF,
-                    (0x1FC0007F << 64) | (0x00FFFF00 << 32) | 0xFF0000FF)[ecc_bit_index]
-        else:
-            raise ValueError('endianness must be either \'big\' or \'little\'')
+    @property
+    def address_size(self):
+        return '{:032b}'.format(self._config['participation_address_mask']).count('1')
 
-    def get_ecc_byte(self, data, data_size=64, endianness='little'):
+    @property
+    def data_size(self):
+        return 64
+
+    @property
+    def parity_table(self):
+        return tuple((lambda x: x) if p == 'even' else (lambda x: 0 if x else 1) for p in self._config['parity_table'])
+
+    @property
+    def participation_table(self):
+        return tuple(p['address'] << 64 | (p['msw'] << 32) | p['lsw'] for p in self._config['participation_table'])
+
+    def get_ecc_byte(self, data, data_size):
         ecc_byte = 0
         for ecc_bit_idx in range(8):
-            p_idx = tuple(
-                i for i in range(data_size) if (self.get_participation(ecc_bit_idx, endianness) >> i) & 1 == 1)
-            ecc_byte |= self.parity[ecc_bit_idx](self._xor_list(tuple((data >> i) & 1 for i in p_idx))) << ecc_bit_idx
+            p_idx = (i for i in range(data_size) if (self.participation_table[ecc_bit_idx] >> i) & 1 == 1)
+            ecc_byte |= self.parity_table[ecc_bit_idx](
+                self._xor_list(tuple((data >> i) & 1 for i in p_idx))) << ecc_bit_idx
         return ecc_byte
 
-    def get_ecc_from_elf(self, data_size=64, addr_size=32):
+    def get_ecc_from_elf(self, elf_file):
         result = list()
-        for data_index in range(0, floor(len(self._elf_file.binary)), int(data_size / 8)):
-            msw, lsw = struct.unpack('{}{}'.format('>' if self._elf_file.endianness == 'big' else '<',
-                                                   'I' * int(data_size / 32)),
-                                     self._elf_file.binary[data_index:data_index + int(data_size / 8)])
-            result.append(self.get_ecc_byte((msw << 32) | lsw, data_size=data_size))
-            print('data_index: 0x{:08X} ECC: 0x{:02X}'.format(data_index, result[-1]))
+        elf_file = pyelf.ElfFile(elf_file)
+        for address in range(0, floor(len(elf_file.binary)), int(self.data_size / 8)):
+            msw, lsw = struct.unpack('{}{}'.format('>' if elf_file.endianness == 'big' else '<',
+                                                   'I' * int(self.data_size / 32)),
+                                     elf_file.binary[address:address + int(self.data_size / 8)])
+            if self.address_size:
+                address_shift = len(bin(self.address_mask)) - len(bin(self.address_mask).rstrip('0'))
+                address_mask = self.address_mask >> address_shift
+                result.append(self.get_ecc_byte((((address >> address_shift) & address_mask) << self.data_size) |
+                                                (msw << 32) |
+                                                lsw,
+                                                data_size=self.data_size + self.address_size))
+            else:
+                result.append(self.get_ecc_byte((msw << 32) |
+                                                lsw,
+                                                data_size=self.data_size))
         return bytearray(result)

@@ -43,13 +43,19 @@ jobs:
         with:
           name: test_input
           path: test_input/bin
-#  generateECCFlashContentWithNowECC:
-#    name: Generate ECC flash content using pyecc
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@master
-#        name: Checkout pyecc project
-#      - name: Build ECC binary using pyecc
-#        run: |
-#          docker build -t pyecc .
-#          docker run -v $(pwd):/usr/project --name pyecc pyecc /bin/bash -c "cd test_input && mkdir build && cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake && make all"
+  generateECCFlashContentWithNowECC:
+    name: Generate ECC flash content using pyecc
+    runs-on: windows-latest
+    steps:
+      - uses: actions/download-artifact@master
+        with:
+          name: test_input
+          path: test_input/bin
+      - name: Download nowECC tool
+        shell: pwsh
+        run: |
+          iwr -outf nowECC.zip www.ti.com/lit/zip/spnc017
+          Expand-Archive -Path nowECC.Zip
+          cd nowECC
+
+      - name: Generate ECC
