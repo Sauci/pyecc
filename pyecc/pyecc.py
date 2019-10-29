@@ -57,13 +57,19 @@ class ECCGen(object):
                 self._xor_list(tuple((data >> i) & 1 for i in p_idx))) << ecc_bit_idx
         return ecc_byte
 
-    def get_ecc_from_elf(self, elf_file):
+    def get_ecc_from_elf(self, input_file, endianness='little'):
         result = list()
-        elf_file = pyelf.ElfFile(elf_file)
-        for address in range(0, floor(len(elf_file.binary)), int(self.data_size / 8)):
-            msw, lsw = struct.unpack('{}{}'.format('>' if elf_file.endianness == 'big' else '<',
+        if os.path.splitext(input_file)[1].lower() == '.elf':
+            elf = pyelf.ElfFile(input_file)
+            binary = elf.binary
+            endianness = elf.endianness
+        elif os.path.splitext(input_file)[1].lower() == '.bin':
+            with open(input_file, 'rb') as fp:
+                binary = fp.read()
+        for address in range(0, floor(len(binary)), int(self.data_size / 8)):
+            msw, lsw = struct.unpack('{}{}'.format('>' if endianness == 'big' else '<',
                                                    'I' * int(self.data_size / 32)),
-                                     elf_file.binary[address:address + int(self.data_size / 8)])
+                                     binary[address:address + int(self.data_size / 8)])
             if self.address_size:
                 address_shift = len(bin(self.address_mask)) - len(bin(self.address_mask).rstrip('0'))
                 address_mask = self.address_mask >> address_shift
