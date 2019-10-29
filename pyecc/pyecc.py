@@ -1,3 +1,9 @@
+"""
+:file: pyecc.py
+:author: Guillaume Sottas
+:date: 28/10/2019
+"""
+
 import os
 import pyelf
 import struct
@@ -6,11 +12,15 @@ import yaml
 from math import floor
 
 
+def get_configuration():
+    with open(os.path.join(os.path.dirname(__file__), 'config.yaml'), 'r') as fp:
+        config = yaml.safe_load(fp)
+    return config
+
+
 class ECCGen(object):
     def __init__(self, device):
-        with open(os.path.join(os.path.dirname(__file__),  'config.yaml'), 'r') as fp:
-            config = yaml.safe_load(fp)
-        self._config = config[device]
+        self._config = get_configuration()[device]
 
     @staticmethod
     def _xor_list(data):
