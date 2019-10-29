@@ -23,6 +23,7 @@ def test_values_from_crt0_against_uniflash_values(addr, msw, lsw, expected):
     assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 29) == expected
 
 
+@pytest.mark.skip
 def test_ecc_values_between_generated_binary_and_uniflash_binary():
     ecc = ECCGen('tms570lc4357')
     ecc_pyecc = ecc.get_ecc_from_elf(os.path.join(os.path.dirname(__file__), 'bin', 'program.elf'))
