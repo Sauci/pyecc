@@ -19,7 +19,7 @@ def test_little_endian_ecc_byte_without_address_participation(msw, lsw, expected
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='little')
+    ecc = ECCGen('spna106_le_no_address')
     assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64) == expected
 
 
@@ -39,11 +39,11 @@ def test_big_endian_ecc_byte_without_address_participation(msw, lsw, expected):
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='big')
+    ecc = ECCGen('spna106_be_no_address')
     assert ecc.get_ecc_byte((msw << 32) | lsw, data_size=64) == expected
 
 
-@pytest.mark.parametrize('addr, msw, lsw, expected', [# pytest.param(0x002415D8, 0xF126E546, 0x9A03FA6F, 0x7C),
+@pytest.mark.parametrize('addr, msw, lsw, expected', [pytest.param(0x002415D8, 0xF126E546, 0x9A03FA6F, 0x7C),
                                                       # pytest.param(0x000952B8, 0x21D94D7E, 0xB18B4F04, 0x3A),
                                                       pytest.param(0x0002C580, 0xF70C3A2D, 0xEC8835ED, 0x60),
                                                       pytest.param(0x00117B40, 0x0ED9FB58, 0x3E03C60D, 0x6B),
@@ -59,7 +59,7 @@ def test_little_endian_ecc_byte_with_address_participation(addr, msw, lsw, expec
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='little')
+    ecc = ECCGen('spna106_le_with_address')
     assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 21) == expected
 
 
@@ -72,13 +72,12 @@ def test_little_endian_ecc_byte_with_address_participation(addr, msw, lsw, expec
                                                       pytest.param(0x003F7180, 0x2C9731FC, 0x4F45EBD3, 0xE9),
                                                       pytest.param(0x003EED68, 0x2542AF7B, 0xBB03EE4D, 0xB3),
                                                       pytest.param(0x00263938, 0x71126F44, 0xF66AA58D, 0xF0),
-                                                      pytest.param(0x0021A9B8, 0xBA82A598, 0x1D957CEF, 0xE8)
-                                                      ])
+                                                      pytest.param(0x0021A9B8, 0xBA82A598, 0x1D957CEF, 0xE8)])
 def test_big_endian_ecc_byte_with_address_participation(addr, msw, lsw, expected):
     """
     test if generated ECC byte is correct when address value does participate to ECC value
     note: see http://www.ti.com.cn/cn/lit/an/spna126/spna126.pdf
     """
 
-    ecc = ECCGen(endianness='big')
+    ecc = ECCGen('spna106_be_with_address')
     assert ecc.get_ecc_byte(((addr >> 3) << 64) | (msw << 32) | lsw, data_size=64 + 21) == expected

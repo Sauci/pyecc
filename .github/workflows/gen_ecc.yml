@@ -1,0 +1,63 @@
+name: Generate ECC binary
+
+on: [push]
+
+jobs:
+  publishDockerImage:
+    name: Publish Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Publish to Github Package Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          dockerfile: Dockerfile
+          name: docker.pkg.github.com/sauci/pyecc/pyecc
+          username: ${{secrets.GITHUB_PKG_REGISTRY_USERNAME}}
+          password: ${{secrets.GITHUB_PKG_REGISTRY_RW_TOKEN}}
+          registry: docker.pkg.github.com
+  performCISteps:
+    needs: publishDockerImage
+    name: Perform CI steps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Login to Github Package Registry
+        run: >-
+          echo ${{secrets.GITHUB_PKG_REGISTRY_RW_TOKEN}} |
+          docker login docker.pkg.github.com
+          --username ${{secrets.GITHUB_PKG_REGISTRY_USERNAME}}
+          --password-stdin
+      - name: Pull Docker image from Github Package Registry
+        run: docker pull docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/}
+      - name: Configure CMake build system
+        run: >-
+          docker run -v $(pwd):/usr/project docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/} /bin/bash -c
+          "cd test && mkdir build && cd build && cmake .. -DCMAKE_TOOLCHAIN_FILE=../toolchain.cmake"
+      - name: Build required test inputs
+        run: >-
+          docker run -v $(pwd):/usr/project docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/} /bin/bash -c
+          "cd test/build && make all"
+      - name: Run tests
+        run: >-
+          docker run -v $(pwd):/usr/project docker.pkg.github.com/sauci/pyecc/pyecc:${GITHUB_REF#refs/heads/} /bin/bash -c
+          "python3 -m pytest test/"
+      - uses: actions/upload-artifact@master
+        name: Publish test inputs as artifacts
+        with:
+          name: test_input
+          path: test/bin
+#  generateECCFlashContentWithNowECC:
+#    name: Generate ECC flash content using pyecc
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/download-artifact@master
+#        with:
+#          name: test_input
+#          path: test_input/bin
+#      - name: Download nowECC tool
+#        shell: pwsh
+#        run: |
+#          iwr -outf nowECC.zip www.ti.com/lit/zip/spnc017
+#          Expand-Archive -Path nowECC.Zip
+#          cd nowECC
