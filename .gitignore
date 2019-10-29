@@ -1,3 +1,3 @@
 .idea
-test_input/build
+test/build
 *__pycache__*

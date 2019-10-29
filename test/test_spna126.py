@@ -72,8 +72,7 @@ def test_little_endian_ecc_byte_with_address_participation(addr, msw, lsw, expec
                                                       pytest.param(0x003F7180, 0x2C9731FC, 0x4F45EBD3, 0xE9),
                                                       pytest.param(0x003EED68, 0x2542AF7B, 0xBB03EE4D, 0xB3),
                                                       pytest.param(0x00263938, 0x71126F44, 0xF66AA58D, 0xF0),
-                                                      pytest.param(0x0021A9B8, 0xBA82A598, 0x1D957CEF, 0xE8)
-                                                      ])
+                                                      pytest.param(0x0021A9B8, 0xBA82A598, 0x1D957CEF, 0xE8)])
 def test_big_endian_ecc_byte_with_address_participation(addr, msw, lsw, expected):
     """
     test if generated ECC byte is correct when address value does participate to ECC value
