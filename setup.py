@@ -13,6 +13,8 @@ setup(
         'console_scripts': ['pyecc=pyecc:main']
     },
     dependency_links=['http://github.com/Sauci/pyelf/tarball/master#egg=pyelf-0.1.0'],
-    install_requires=['PyYAML==5.1.2'],
+    install_requires=['PyYAML',
+                      'bincopy',
+                      'pytest'],
     include_package_data=True
 )
