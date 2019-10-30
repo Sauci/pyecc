@@ -5,7 +5,7 @@ setup(
     version='0.1.0',
     packages=['pyecc'],
     url='https://github.com/Sauci/pyecc',
-    license='BBSD',
+    license='BSD',
     author='Guillaume Sottas',
     author_email='guillaumesottas@gmail.com',
     description='This tool generates the ECC data to be programmed into flash ECC of TMS570 Platform Series microcontrollers',
