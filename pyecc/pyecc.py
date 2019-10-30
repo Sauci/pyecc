@@ -4,6 +4,7 @@
 :date: 28/10/2019
 """
 
+import bincopy
 import os
 import pyelf
 import struct
@@ -61,11 +62,15 @@ class ECCGen(object):
         result = list()
         if os.path.splitext(input_file)[1].lower() == '.elf':
             elf = pyelf.ElfFile(input_file)
-            binary = elf.binary
+            binary = bytearray(elf.binary)
             endianness = elf.endianness
         elif os.path.splitext(input_file)[1].lower() == '.bin':
             with open(input_file, 'rb') as fp:
-                binary = fp.read()
+                binary = bytearray(fp.read())
+        elif os.path.splitext(input_file)[1].lower() == '.srec':
+            binary = bincopy.BinFile(input_file).as_binary()
+        # aligned_64_addresses = [x for x in range(len(binary)) if x % 8 == 0 and x + 8 <= len(binary)]
+        # for address in aligned_64_addresses:
         for address in range(0, floor(len(binary)), int(self.data_size / 8)):
             msw, lsw = struct.unpack('{}{}'.format('>' if endianness == 'big' else '<',
                                                    'I' * int(self.data_size / 32)),
