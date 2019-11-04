@@ -24,6 +24,21 @@ class ECCGen(object):
         self._config = get_configuration()[device]
 
     @staticmethod
+    def _get_binary_and_endianness_from_file_path(input_file, endianness='little'):
+        if os.path.splitext(input_file)[1].lower() == '.elf':
+            elf = pyelf.ElfFile(input_file)
+            binary = bytearray(elf.binary)
+            endianness = elf.endianness
+        elif os.path.splitext(input_file)[1].lower() == '.bin':
+            with open(input_file, 'rb') as fp:
+                binary = bytearray(fp.read())
+        elif os.path.splitext(input_file)[1].lower() == '.srec':
+            binary = bincopy.BinFile(input_file).as_binary()
+        else:
+            raise TypeError('unsupported file format. supported formats are elf, bin and srec')
+        return binary, endianness
+
+    @staticmethod
     def _xor_list(data):
         result = data[0]
         for d in data[1:]:
@@ -60,17 +75,9 @@ class ECCGen(object):
 
     def get_ecc_from_elf(self, input_file, endianness='little'):
         result = list()
-        if os.path.splitext(input_file)[1].lower() == '.elf':
-            elf = pyelf.ElfFile(input_file)
-            binary = bytearray(elf.binary)
-            endianness = elf.endianness
-        elif os.path.splitext(input_file)[1].lower() == '.bin':
-            with open(input_file, 'rb') as fp:
-                binary = bytearray(fp.read())
-        elif os.path.splitext(input_file)[1].lower() == '.srec':
-            binary = bincopy.BinFile(input_file).as_binary()
-        # aligned_64_addresses = [x for x in range(len(binary)) if x % 8 == 0 and x + 8 <= len(binary)]
-        # for address in aligned_64_addresses:
+        binary, endianness = self._get_binary_and_endianness_from_file_path(input_file, endianness)
+        if len(binary) % 8 != 0:
+            raise ValueError('the script only support 64 bit-aligned input')
         for address in range(0, floor(len(binary)), int(self.data_size / 8)):
             msw, lsw = struct.unpack('{}{}'.format('>' if endianness == 'big' else '<',
                                                    'I' * int(self.data_size / 32)),
